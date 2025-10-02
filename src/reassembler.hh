@@ -1,6 +1,7 @@
 #pragma once
 
 #include "byte_stream.hh"
+#include <set>
 
 class Reassembler
 {
@@ -30,6 +31,8 @@ public:
    */
   void insert( uint64_t first_index, std::string data, bool is_last_substring );
 
+  void check_push();
+
   // How many bytes are stored in the Reassembler itself?
   // This function is for testing only; don't add extra state to support it.
   uint64_t count_bytes_pending() const;
@@ -43,4 +46,15 @@ public:
 
 private:
   ByteStream output_;
+  struct Seg
+  {
+    uint64_t first_index;
+    std::string data;
+    bool operator<( const Seg& other ) const { return first_index < other.first_index; }
+    Seg( uint64_t f, const std::string& d ) : first_index( f ), data( d ) {};
+  };
+  std::set<Seg> segments_ {};
+  uint64_t bytes_waiting_ {};        // 未写入的字节
+  uint64_t final_index_ = INT64_MAX; // 最终索引
+  uint64_t first_unassembled_index_ {};
 };
