@@ -5,7 +5,7 @@ using namespace std;
 
 void Reassembler::insert( uint64_t first_index, string data, bool is_last_substring )
 {
-  debug( "unimplemented insert({}, {}, {}) called", first_index, data, is_last_substring );
+  // debug( "unimplemented insert({}, {}, {}) called", first_index, data, is_last_substring );
   uint64_t last_index = first_index + data.size();
   uint64_t first_unacceptable = first_unassembled_index_ + output_.writer().available_capacity();
   if ( is_last_substring ) {
@@ -56,7 +56,7 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
 // This function is for testing only; don't add extra state to support it.
 uint64_t Reassembler::count_bytes_pending() const
 {
-  debug( "unimplemented count_bytes_pending() called" );
+  // debug( "unimplemented count_bytes_pending() called" );
   return bytes_waiting_;
 }
 
