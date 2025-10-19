@@ -4,6 +4,7 @@
 #include "ethernet_frame.hh"
 #include "ipv4_datagram.hh"
 
+#include <map>
 #include <memory>
 #include <queue>
 
@@ -66,6 +67,9 @@ public:
   OutputPort& output() { return *port_; }
   std::queue<InternetDatagram>& datagrams_received() { return datagrams_received_; }
 
+  static constexpr size_t ARP_RETX_PERIOD = 5000;
+  static constexpr size_t ARP_MAP_TTL = 30000;
+
 private:
   // Human-readable name of the interface
   std::string name_;
@@ -82,4 +86,9 @@ private:
 
   // Datagrams that have been received
   std::queue<InternetDatagram> datagrams_received_ {};
+
+  std::map<uint32_t, std::pair<EthernetAddress, size_t>> arp_map_ {};
+  std::map<uint32_t, std::vector<std::pair<InternetDatagram, size_t>>> broadcast_waitlist_ {};
+
+  uint64_t timer_ {};
 };
