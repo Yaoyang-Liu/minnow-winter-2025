@@ -21,10 +21,38 @@ void Router::add_route( const uint32_t route_prefix,
        << " on interface " << interface_num << "\n";
 
   debug( "unimplemented add_route() called" );
+  routes.emplace_back( route_prefix, prefix_length, next_hop, interface_num );
 }
 
 // Go through all the interfaces, and route every incoming datagram to its proper outgoing interface.
 void Router::route()
 {
   debug( "unimplemented route() called" );
+  for ( auto& interface_ : interfaces_ ) {
+    while ( !interface_->datagrams_received().empty() ) {
+      auto datagram = interface_->datagrams_received().front();
+      interface_->datagrams_received().pop();
+      auto dst_ip = datagram.header.dst;
+      auto cur_best_match = routes.end();
+      for ( auto it = routes.begin(); it != routes.end(); ++it ) {
+        uint32_t netmask = ( it->prefix_length == 0 ) ? 0 : ( 0xFFFFFFFF << ( 32 - it->prefix_length ) );
+        if ( ( it->route_prefix & netmask ) == ( dst_ip & netmask ) ) {
+          if ( cur_best_match == routes.end() || it->prefix_length > cur_best_match->prefix_length ) {
+            cur_best_match = it;
+          }
+        }
+      }
+      if ( cur_best_match == routes.end() || datagram.header.ttl <= 1 ) {
+        continue;
+      }
+      datagram.header.ttl--;
+      datagram.header.compute_checksum();
+      auto next_interface = interface( cur_best_match->interface_idx );
+      if ( cur_best_match->next_hop.has_value() ) {
+        next_interface->send_datagram( datagram, cur_best_match->next_hop.value() );
+      } else {
+        next_interface->send_datagram( datagram, Address::from_ipv4_numeric( dst_ip ) );
+      }
+    }
+  }
 }
